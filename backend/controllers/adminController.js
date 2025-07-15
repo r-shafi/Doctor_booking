@@ -100,8 +100,19 @@ const addDoctor = async (req, res) => {
 
     log('Generating password and hashing it');
     const salt = await bcrypt.genSalt(10);
-    const password = Math.random().toString(36).slice(2);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Generate a more reliable password with at least 8 characters
+    const password = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    const finalPassword = password.slice(0, 8); // Ensure at least 8 characters
+    const hashedPassword = await bcrypt.hash(finalPassword, salt);
+
+    console.log('🔐 DOCTOR CREDENTIALS GENERATED:');
+    console.log('📧 Email:', email);
+    console.log('🔑 Password:', finalPassword);
+    console.log('🔑 Password Length:', finalPassword.length);
+    console.log('🔐 Hashed Password:', hashedPassword);
+    console.log('👨‍⚕️ Doctor Name:', name);
+    console.log('🏥 Speciality:', speciality);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     log('Uploading doctor image to Cloudinary');
     const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
@@ -129,7 +140,13 @@ const addDoctor = async (req, res) => {
     await newDoctor.save();
     log('Doctor saved successfully');
 
-    // Send welcome email with login credentials
+    console.log('✅ DOCTOR ACCOUNT CREATED SUCCESSFULLY:');
+    console.log('👨‍⚕️ Name:', name);
+    console.log('📧 Email:', email);
+    console.log('🔑 Login Password:', password);
+    console.log('🆔 Doctor ID:', newDoctor._id);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
     const emailHtml = `
       <h3>Welcome Dr. ${name},</h3>
       <p>Your profile has been added successfully to the Doctor Booking System.</p>
