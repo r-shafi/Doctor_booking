@@ -1,21 +1,22 @@
-import React, { useContext, useState } from "react";
-import { assets } from "../../assets/assets";
-import { toast } from "react-toastify";
-import axios from "axios";
-import { AdminContext } from "../../context/AdminContext";
-import { AppContext } from "../../context/AppContext";
+import axios from 'axios';
+import { useContext, useState } from 'react';
+import { toast } from 'react-toastify';
+import { assets } from '../../assets/assets';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { AdminContext } from '../../context/AdminContext';
+import { AppContext } from '../../context/AppContext';
 
 const AddDoctor = () => {
   const [docImg, setDocImg] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [experience, setExperience] = useState("0 to 1 year");
-  const [fees, setFees] = useState("");
-  const [about, setAbout] = useState("");
-  const [speciality, setSpeciality] = useState("General Physician");
-  const [degree, setDegree] = useState("");
-  const [address1, setAddress1] = useState("");
-  const [address2, setAddress2] = useState("");
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [experience, setExperience] = useState('0 to 1 year');
+  const [fees, setFees] = useState('');
+  const [about, setAbout] = useState('');
+  const [speciality, setSpeciality] = useState('General Physician');
+  const [degree, setDegree] = useState('');
+  const [address1, setAddress1] = useState('');
+  const [address2, setAddress2] = useState('');
   const [loading, setLoading] = useState(false);
 
   const [errors, setErrors] = useState({});
@@ -25,14 +26,14 @@ const AddDoctor = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!name.trim()) newErrors.name = "Name is required";
+    if (!name.trim()) newErrors.name = 'Name is required';
     if (!email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required';
     } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-      newErrors.email = "Invalid email format";
+      newErrors.email = 'Invalid email format';
     }
     if (!fees || isNaN(fees) || Number(fees) <= 0) {
-      newErrors.fees = "Valid fees required";
+      newErrors.fees = 'Valid fees required';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -43,27 +44,27 @@ const AddDoctor = () => {
     if (!validateForm()) return;
 
     if (!docImg) {
-      return toast.error("Image not selected");
+      return toast.error('Image not selected');
     }
 
     try {
       setLoading(true);
       const formData = new FormData();
-      formData.append("image", docImg);
-      formData.append("name", name);
-      formData.append("email", email.toLowerCase().trim());
-      formData.append("experience", experience);
-      formData.append("fees", Number(fees));
-      formData.append("about", about);
-      formData.append("speciality", speciality);
-      formData.append("degree", degree);
+      formData.append('image', docImg);
+      formData.append('name', name);
+      formData.append('email', email.toLowerCase().trim());
+      formData.append('experience', experience);
+      formData.append('fees', Number(fees));
+      formData.append('about', about);
+      formData.append('speciality', speciality);
+      formData.append('degree', degree);
       formData.append(
-        "address",
+        'address',
         JSON.stringify({ line1: address1, line2: address2 })
       );
 
       const { data } = await axios.post(
-        backendUrl + "/api/admin/add-doctor",
+        backendUrl + '/api/admin/add-doctor',
         formData,
         { headers: { aToken } }
       );
@@ -71,76 +72,76 @@ const AddDoctor = () => {
       if (data.success) {
         toast.success(data.message);
         setDocImg(false);
-        setName("");
-        setEmail("");
-        setAddress1("");
-        setAddress2("");
-        setDegree("");
-        setAbout("");
-        setFees("");
+        setName('');
+        setEmail('');
+        setAddress1('');
+        setAddress2('');
+        setDegree('');
+        setAbout('');
+        setFees('');
         setErrors({});
       } else {
         toast.error(data.message);
       }
     } catch (error) {
       console.log(error);
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setLoading(false);
     }
   };
 
   const experienceOptions = Array.from({ length: 20 }, (_, i) => {
-    return `${i} to ${i + 1} year${i + 1 > 1 ? "s" : ""}`;
+    return `${i} to ${i + 1} year${i + 1 > 1 ? 's' : ''}`;
   });
 
   const specialities = [
-    "Allergy and Immunology",
-    "Anesthesiology",
-    "Cardiology",
-    "Cardiothoracic Surgery",
-    "Critical Care Medicine",
-    "Dermatology",
-    "Emergency Medicine",
-    "Endocrinology",
-    "Family Medicine",
-    "Gastroenterology",
-    "General Surgery",
-    "Geriatrics",
-    "Gynecology",
-    "Hematology",
-    "Hepatology",
-    "Infectious Disease",
-    "Internal Medicine",
-    "Interventional Radiology",
-    "Medical Genetics",
-    "Nephrology",
-    "Neurology",
-    "Neurosurgery",
-    "Nuclear Medicine",
-    "Obstetrics",
-    "Oncology",
-    "Ophthalmology",
-    "Orthopedic Surgery",
-    "Otolaryngology (ENT)",
-    "Pain Management",
-    "Pathology",
-    "Pediatrics",
-    "Physical Medicine and Rehabilitation",
-    "Plastic Surgery",
-    "Podiatry",
-    "Preventive Medicine",
-    "Psychiatry",
-    "Pulmonology",
-    "Radiology",
-    "Rheumatology",
-    "Sleep Medicine",
-    "Sports Medicine",
-    "Surgical Oncology",
-    "Thoracic Surgery",
-    "Transplant Surgery",
-    "Urology",
-    "Vascular Surgery",
+    'Allergy and Immunology',
+    'Anesthesiology',
+    'Cardiology',
+    'Cardiothoracic Surgery',
+    'Critical Care Medicine',
+    'Dermatology',
+    'Emergency Medicine',
+    'Endocrinology',
+    'Family Medicine',
+    'Gastroenterology',
+    'General Surgery',
+    'Geriatrics',
+    'Gynecology',
+    'Hematology',
+    'Hepatology',
+    'Infectious Disease',
+    'Internal Medicine',
+    'Interventional Radiology',
+    'Medical Genetics',
+    'Nephrology',
+    'Neurology',
+    'Neurosurgery',
+    'Nuclear Medicine',
+    'Obstetrics',
+    'Oncology',
+    'Ophthalmology',
+    'Orthopedic Surgery',
+    'Otolaryngology (ENT)',
+    'Pain Management',
+    'Pathology',
+    'Pediatrics',
+    'Physical Medicine and Rehabilitation',
+    'Plastic Surgery',
+    'Podiatry',
+    'Preventive Medicine',
+    'Psychiatry',
+    'Pulmonology',
+    'Radiology',
+    'Rheumatology',
+    'Sleep Medicine',
+    'Sports Medicine',
+    'Surgical Oncology',
+    'Thoracic Surgery',
+    'Transplant Surgery',
+    'Urology',
+    'Vascular Surgery',
   ];
 
   return (
@@ -286,12 +287,15 @@ const AddDoctor = () => {
 
         <button
           type="submit"
-          className={`mt-4 px-10 py-3 rounded-full text-white ${
-            loading ? "bg-gray-400" : "bg-primary"
+          className={`mt-4 px-10 py-3 rounded-full text-white font-medium transition-all duration-200 flex items-center gap-2 ${
+            loading
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-primary hover:bg-primary-dark hover:shadow-lg'
           }`}
           disabled={loading}
         >
-          {loading ? "Adding..." : "Add Doctor"}
+          {loading && <LoadingSpinner size="sm" className="text-white" />}
+          {loading ? 'Adding Doctor...' : 'Add Doctor'}
         </button>
       </div>
     </form>
