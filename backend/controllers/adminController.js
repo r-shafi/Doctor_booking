@@ -1,11 +1,11 @@
-import jwt from "jsonwebtoken";
-import appointmentModel from "../models/appointmentModel.js";
-import doctorModel from "../models/doctorModel.js";
-import bcrypt from "bcrypt";
-import validator from "validator";
-import { v2 as cloudinary } from "cloudinary";
-import userModel from "../models/userModel.js";
-import nodemailer from "nodemailer";
+import bcrypt from 'bcrypt';
+import { v2 as cloudinary } from 'cloudinary';
+import jwt from 'jsonwebtoken';
+import validator from 'validator';
+import appointmentModel from '../models/appointmentModel.js';
+import doctorModel from '../models/doctorModel.js';
+import userModel from '../models/userModel.js';
+import sendMail from '../utils/sendMail.js';
 
 const log = (message) => {
   console.log(`[ADMIN LOG] ${new Date().toISOString()} - ${message}`);
@@ -25,22 +25,22 @@ const loginAdmin = async (req, res) => {
       res.json({ success: true, token });
     } else {
       log(`Admin login failed: Invalid credentials`);
-      res.json({ success: false, message: "Invalid credentials" });
+      res.json({ success: false, message: 'Invalid credentials' });
     }
   } catch (error) {
-    console.error("[LOGIN ERROR]", error);
+    console.error('[LOGIN ERROR]', error);
     res.json({ success: false, message: error.message });
   }
 };
 
 const appointmentsAdmin = async (req, res) => {
   try {
-    log("Fetching all appointments");
+    log('Fetching all appointments');
     const appointments = await appointmentModel.find({});
     log(`Fetched ${appointments.length} appointments`);
     res.json({ success: true, appointments });
   } catch (error) {
-    console.error("[FETCH APPOINTMENTS ERROR]", error);
+    console.error('[FETCH APPOINTMENTS ERROR]', error);
     res.json({ success: false, message: error.message });
   }
 };
@@ -53,9 +53,9 @@ const appointmentCancel = async (req, res) => {
       cancelled: true,
     });
     log(`Appointment ${appointmentId} cancelled successfully`);
-    res.json({ success: true, message: "Appointment Cancelled" });
+    res.json({ success: true, message: 'Appointment Cancelled' });
   } catch (error) {
-    console.error("[CANCEL APPOINTMENT ERROR]", error);
+    console.error('[CANCEL APPOINTMENT ERROR]', error);
     res.json({ success: false, message: error.message });
   }
 };
@@ -78,37 +78,37 @@ const addDoctor = async (req, res) => {
       !fees ||
       !address
     ) {
-      log("Missing required doctor details");
-      return res.json({ success: false, message: "Missing Details" });
+      log('Missing required doctor details');
+      return res.json({ success: false, message: 'Missing Details' });
     }
 
     email = email.trim().toLowerCase();
 
     if (!validator.isEmail(email)) {
-      log("Invalid email format");
+      log('Invalid email format');
       return res.json({
         success: false,
-        message: "Please enter a valid email",
+        message: 'Please enter a valid email',
       });
     }
 
     const existingDoctor = await doctorModel.findOne({ email });
     if (existingDoctor) {
       log(`Doctor with email ${email} already exists`);
-      return res.json({ success: false, message: "Email already in use" });
+      return res.json({ success: false, message: 'Email already in use' });
     }
 
-    log("Generating password and hashing it");
+    log('Generating password and hashing it');
     const salt = await bcrypt.genSalt(10);
     const password = Math.random().toString(36).slice(2);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    log("Uploading doctor image to Cloudinary");
+    log('Uploading doctor image to Cloudinary');
     const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
-      resource_type: "image",
+      resource_type: 'image',
     });
     const imageUrl = imageUpload.secure_url;
-    log("Image uploaded successfully");
+    log('Image uploaded successfully');
 
     const doctorData = {
       name,
@@ -124,65 +124,68 @@ const addDoctor = async (req, res) => {
       date: Date.now(),
     };
 
-    log("Saving doctor data to database");
+    log('Saving doctor data to database');
     const newDoctor = new doctorModel(doctorData);
     await newDoctor.save();
-    log("Doctor saved successfully");
+    log('Doctor saved successfully');
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_ADDRESS,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Doctor Booking App" <${process.env.EMAIL_ADDRESS}>`,
-      to: email,
-      subject: "Doctor Account Created",
-      html: `
-                <h3>Welcome Dr. ${name},</h3>
-                <p>Your profile has been added successfully to the system.</p>
-                <p><b>Login Credentials:</b></p>
-                <ul>
-                    <li>Email: ${email}</li>
-                    <li>Password: ${password}</li>
-                </ul>
-                <p>Please log in to your account and update your profile as needed.</p>
-                <br>
-                <p>Thanks,<br/>Doctor Booking Team</p>
-            `,
-    };
+    // Send welcome email with login credentials
+    const emailHtml = `
+      <h3>Welcome Dr. ${name},</h3>
+      <p>Your profile has been added successfully to the Doctor Booking System.</p>
+      <p><b>Login Credentials:</b></p>
+      <ul>
+          <li>Email: ${email}</li>
+          <li>Password: ${password}</li>
+      </ul>
+      <p>Please log in to your account at the admin panel and update your profile as needed.</p>
+      <p><strong>Important:</strong> For security reasons, please change your password after your first login.</p>
+      <br>
+      <p>Thanks,<br/>Doctor Booking Team</p>
+    `;
 
     log(`Sending welcome email to ${email}`);
-    await transporter.sendMail(mailOptions);
-    log("Email sent successfully");
+    const emailSent = await sendMail({
+      to: email,
+      subject: 'Doctor Account Created - Login Credentials',
+      html: emailHtml,
+    });
 
-    res.json({ success: true, message: "Doctor Added and Email Sent" });
+    if (emailSent) {
+      log('Email sent successfully');
+      res.json({
+        success: true,
+        message: 'Doctor Added and Email Sent Successfully',
+      });
+    } else {
+      log('Email sending failed, but doctor was created');
+      res.json({
+        success: true,
+        message:
+          'Doctor Added Successfully, but email notification failed. Please contact the doctor manually with login credentials.',
+      });
+    }
   } catch (error) {
-    console.error("[ADD DOCTOR ERROR]", error);
+    console.error('[ADD DOCTOR ERROR]', error);
     res.json({ success: false, message: error.message });
   }
 };
 
 const allDoctors = async (req, res) => {
   try {
-    log("Fetching all doctors");
-    const doctors = await doctorModel.find({}).select("-password");
+    log('Fetching all doctors');
+    const doctors = await doctorModel.find({}).select('-password');
     log(`Fetched ${doctors.length} doctors`);
     res.json({ success: true, doctors });
   } catch (error) {
-    console.error("[FETCH DOCTORS ERROR]", error);
+    console.error('[FETCH DOCTORS ERROR]', error);
     res.json({ success: false, message: error.message });
   }
 };
 
 const adminDashboard = async (req, res) => {
   try {
-    log("Loading admin dashboard data");
+    log('Loading admin dashboard data');
 
     const doctors = await doctorModel.find({});
     const users = await userModel.find({});
@@ -195,19 +198,19 @@ const adminDashboard = async (req, res) => {
       latestAppointments: appointments.reverse(),
     };
 
-    log("Dashboard data prepared");
+    log('Dashboard data prepared');
     res.json({ success: true, dashData });
   } catch (error) {
-    console.error("[DASHBOARD ERROR]", error);
+    console.error('[DASHBOARD ERROR]', error);
     res.json({ success: false, message: error.message });
   }
 };
 
 export {
-  loginAdmin,
-  appointmentsAdmin,
-  appointmentCancel,
   addDoctor,
-  allDoctors,
   adminDashboard,
+  allDoctors,
+  appointmentCancel,
+  appointmentsAdmin,
+  loginAdmin,
 };
