@@ -1,0 +1,19 @@
+# Ignore node_modules in all subfolders
+**/node_modules/
+
+# Ignore .env files in all folders
+
+# Ignore build artifacts
+**/dist/
+**/build/
+
+# Logs
+**/logs
+**/*.log
+
+# Mac/OS/Editor files
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
